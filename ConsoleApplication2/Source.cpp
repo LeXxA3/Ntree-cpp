@@ -1,142 +1,156 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
 #include <stdlib.h>
 
 using namespace std;
 
 struct Node
 {
-	int nodeValue;			//значение узла
-	int numberOfSon;        //номер узла
-	int levelOfSon;         //уровень узла
-	Node** childs;			//массив указателей на сыновей
-	int countChildsOfNode;  //количество сыновей узла
-};
+	int nodeValue;		
+	int numberOfSon;       
+	int levelOfSon;        
+	Node** childsOfNodeArray;			
+	int countChildsOfNode;  
+};		
 
-int tempValue;					//переменная для временного хранения значения узла
-
-void createNode(Node *node, int index, int levelOfSon)
+void readValueOfNodeFromKeyboard(Node *node)
 {
-	for (int i = 0; i < node->countChildsOfNode; i++)				//для всех сыновей
+	cout << "\nВведите значение узла (" << (node->levelOfSon) << "-" << (node->numberOfSon) << "): ";
+	cin >> node->nodeValue;
+}
+
+void readChildsOfNodeFromKeyboard(Node *node)
+{
+	cout << "Сколько сыновей у (" << (node->levelOfSon) << "-" << (node->numberOfSon) << "): ";
+	cin >> node->countChildsOfNode;
+	node->childsOfNodeArray = new Node *[node->countChildsOfNode];
+}
+
+void createChildsOfNode(Node *node, int index, int levelOfSon)
+{
+	for (int i = 0; i < node->countChildsOfNode; i++)
 	{
-	node->childs[i] = new Node;						//выделяем память
-	node->childs[i]->numberOfSon = index + i;		//увеличиваем номер
-	node->childs[i]->levelOfSon = levelOfSon;
+		node->childsOfNodeArray[i] = new Node;
+		node->childsOfNodeArray[i]->numberOfSon = index + i;
+		node->childsOfNodeArray[i]->levelOfSon = levelOfSon;
 	}
 }
 
-Node *createTree(Node *node, int index, int levelOfSon)	//функция создания дерева
+Node *recursiveCreateTreeFromInput(Node *node, int index, int levelOfSon)	
 {
-	node->numberOfSon = index;					//передаём номер узла
-	node->levelOfSon = levelOfSon;				//передаём уровень узла
-	cout << "\nВведите значение узла (" << (node->levelOfSon) << "-" << (node->numberOfSon) << "): ";
-	cin >> tempValue;									//вводим значение узла
-	node->nodeValue = tempValue;							//привязываем это значение к узлу
-	cout << "Сколько сыновей у (" << (node->levelOfSon) << "-" << (node->numberOfSon) << "): ";
-	cin >> node->countChildsOfNode;								//вводим количество сыновей
-		node->childs = new Node *[node->countChildsOfNode];		//Выделяем память под них
-		levelOfSon++;							//увеличиваем уровень узла
-		createNode(node, index, levelOfSon);
-		for (int i = 0; i < node->countChildsOfNode; i++)	
-			createTree(node->childs[i], index + i, levelOfSon); //рекурсивно проделываем все операции для каждого нового сына
-	return node;									//возвращаем дерево
+	node->numberOfSon = index;					
+	node->levelOfSon = levelOfSon;
+	readValueOfNodeFromKeyboard(node);
+	readChildsOfNodeFromKeyboard(node);
+	levelOfSon++;		
+	createChildsOfNode(node, index, levelOfSon);
+	for (int i = 0; i < node->countChildsOfNode; i++)	
+		recursiveCreateTreeFromInput(node->childsOfNodeArray[i], index + i, levelOfSon); 
+	return node;									
 }
 
-void printTree(Node *node)						 //функция печати дерева
+void recursivePrintTree(Node *node)						 
 {
-	if (node)									 //если дерево не пустое
+	if (node)									
 	{
 		for (int i = 0; i < (node->levelOfSon); i++) 
-			cout << "  ";					 //выводим отступ, обозначающий уровень
-		if (node->childs != NULL)				 //если массив сыновей не пуст
-		cout << node->nodeValue << endl;			 //то выводим информацию узла
-		if ((node->countChildsOfNode) != 0)					 //если есть сыновья
+			cout << "  ";								
+		if (node->childsOfNodeArray != NULL)				
+		cout << node->nodeValue << endl;			
+		if ((node->countChildsOfNode) != 0)					
 			for (int i = 0; i < (node->countChildsOfNode); i++) 
-				printTree(node->childs[i]);		 //то рекурсивно выводим каждого
+				recursivePrintTree(node->childsOfNodeArray[i]);		 
 	}
 }
 
-void deleteTree(Node *node)					//функция удаления дерева
+void recursiveDeleteTree(Node *node)				
 {
-		if ((node->countChildsOfNode) != 0)					//если есть сыновья
-			for (int i = 0; i < (node->countChildsOfNode); i++)
-				deleteTree(node->childs[i]);		//рекурсивно удаляем каждого их них
-	delete[] node->childs;						//операция удаления
+	if ((node->countChildsOfNode) != 0)				
+		for (int i = 0; i < (node->countChildsOfNode); i++)
+			recursiveDeleteTree(node->childsOfNodeArray[i]);		
+	delete[] node->childsOfNodeArray;					
 }
 
-Node *searchNode(Node *node, int targetHeight, int heightOfNode)	//функция поиска дерева нужной высоты
+Node *recursiveSearchNode(Node *node, int targetHeight, int heightOfNode)	
 {
 	if (node)
 	{
-		if (heightOfNode == targetHeight)							//если высота поддерева совпадает с нужной
-			return node;								//возвращаем корень этого поддерева
+		if (heightOfNode == targetHeight)						
+			return node;								
 		for (int i = 0; i < node->countChildsOfNode; i++)
 		{
-			searchNode(node->childs[i], targetHeight, heightOfNode++);//рекурсивно проделываем это для каждого сына
+			recursiveSearchNode(node->childsOfNodeArray[i], targetHeight, heightOfNode++);
 		}
 	}
-														 //увеличивая высоту			
+														
 }
 
-Node *searchMinWidthOfNode(Node *t, Node **min)	 //функция определения самого широкого(узкого) поддерева
+Node *recursiveSearchMinWidthOfNode(Node *node, Node **min)	
 {
-
-	if (*min == NULL)						//если минимальное дерево пусто
-		*min = t;							//то присваеваем ему текущее дерево
-	else if (t->countChildsOfNode < (*min)->countChildsOfNode)				//иначе если ширина текущего дерева меньше минимальной
-		*min = t;							//то делаем текущее дерево узким
-
-	for (int i = 0; i < t->countChildsOfNode; i++)
+	if (*min == NULL)					
+		*min = node;						
+	else if (node->countChildsOfNode < (*min)->countChildsOfNode)			
+		*min = node;							
+	for (int i = 0; i < node->countChildsOfNode; i++)
 	{
-		searchMinWidthOfNode(t->childs[i], min);		//рекурсивно выполняем данные операции для каждого поддерева
+		recursiveSearchMinWidthOfNode(node->childsOfNodeArray[i], min);		
 	}
 	return *min;
 }
 
-Node *searchMaxWidthOfNode(Node *node, Node **max)	 //функция определения самого широкого(узкого) поддерева
+Node *recursiveSearchMaxWidthOfNode(Node *node, Node **max)	
 {
-	if (*max == NULL)											//если максимальное дерево пусто
-	*max = node;													//то присваеваем ему текущее дерево
-	else if (node->countChildsOfNode > (*max)->countChildsOfNode)	//иначе если ширина текущего дерева больше максимальной
-	*max = node;													//то делаем текущее дерево широким
+	if (*max == NULL)										
+	*max = node;													
+	else if (node->countChildsOfNode > (*max)->countChildsOfNode)	
+	*max = node;													
 
 	for (int i = 0; i < node->countChildsOfNode; i++)
 		{
-			searchMaxWidthOfNode(node->childs[i], max);		//рекурсивно выполняем данные операции для каждого поддерева
+			recursiveSearchMaxWidthOfNode(node->childsOfNodeArray[i], max);		
 		}
 	return *max;
 }
 
 int main()
 {
-	setlocale(LC_ALL, "RUS");				//поддержка русских символов
+	setlocale(LC_ALL, "RUS");				
 	cout << "Первое число - номер уровня, второе число - номер элемента в уровне\n";
-	Node *tree;								//создаем дерево
-	tree = new Node;							//и выделяем под него память
-	tree = createTree(tree, 0, 0);				//заполняем дерево
-	printTree(tree);							//выводим дерево на экран
+	Node *tree;								
+	tree = new Node;						
+	tree = recursiveCreateTreeFromInput(tree, 0, 0);			
+	recursivePrintTree(tree);						
 	cout << "Введите нужную высоту: " << endl;
 	int targetHeight;							
-	cin >> targetHeight;					//вводим высоту поддерева
-	Node *treeOfTargetHeight;								//создаем ещё одно дерево
-	treeOfTargetHeight = new Node;							//и выделяем под него память
-	treeOfTargetHeight = searchNode(tree, targetHeight, 0);	//Находим поддеревья нужной высоты
-	Node *min = NULL, *max = NULL;			//создаем объекты широкого и узкого поддеревьев
-	min=searchMinWidthOfNode(treeOfTargetHeight, &min);			//определяем их
-	min=searchMaxWidthOfNode(treeOfTargetHeight, &max);
-	if (min != NULL)						//если самое узкое дерево нашлось
+	cin >> targetHeight;					
+	Node *treeOfTargetHeight;
+	treeOfTargetHeight = new Node;							
+	treeOfTargetHeight = recursiveSearchNode(tree, targetHeight, 0);	
+	Node *min = NULL, *max = NULL;			
+	min=recursiveSearchMinWidthOfNode(treeOfTargetHeight, &min);			
+	min=recursiveSearchMaxWidthOfNode(treeOfTargetHeight, &max);
+	if (min)
 	{
 		cout << "Самое узкое дерево заданной высоты" << endl;
-		printTree(min);						//то выводим его на экран
+		recursivePrintTree(min);
 	}
-	if (max != NULL)						//если самое широкое дерево нашлось
+	else
+	{
+		cout << "Самое узкое дерево заданной высоты не найдено" << endl;
+	}
+
+	if (max)					
 	{
 		cout << "Самое широкое дерево заданной высоты" << endl;
-		printTree(max);						//то выводим его на экран
+		recursivePrintTree(max);						
 	}
-	deleteTree(tree);						//удаляем деревья
-	deleteTree(treeOfTargetHeight);	
-	deleteTree(min);
-	deleteTree(max);
-	return 0;								//выход из программы						
+	else
+	{
+		cout << "Самое широкое дерево заданной высоты не найдено" << endl;
+	}
+
+	recursiveDeleteTree(tree);						
+	recursiveDeleteTree(treeOfTargetHeight);	
+	recursiveDeleteTree(min);
+	recursiveDeleteTree(max);
+	return 0;													
 }
