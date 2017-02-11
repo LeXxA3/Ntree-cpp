@@ -25,7 +25,6 @@ void createNode(Node *node, int index, int levelOfSon)
 	}
 }
 
-
 Node *createTree(Node *node, int index, int levelOfSon)	//функция создания дерева
 {
 	node->numberOfSon = index;					//передаём номер узла
@@ -65,17 +64,21 @@ void deleteTree(Node *node)					//функция удаления дерева
 	delete[] node->childs;						//операция удаления
 }
 
-Node *needHeight(Node *t, int cHeight, int h)	//функция поиска дерева нужной высоты
+Node *searchNode(Node *node, int targetHeight, int heightOfNode)	//функция поиска дерева нужной высоты
 {
-	if (h == cHeight)							//если высота поддерева совпадает с нужной
-		return t;								//возвращаем корень этого поддерева
-	for (int i = 0; i < t->countChildsOfNode; i++)		
+	if (node)
 	{
-		needHeight(t->childs[i], cHeight, h++);//рекурсивно проделываем это для каждого сына
-	}										 //увеличивая высоту			
+		if (heightOfNode == targetHeight)							//если высота поддерева совпадает с нужной
+			return node;								//возвращаем корень этого поддерева
+		for (int i = 0; i < node->countChildsOfNode; i++)
+		{
+			searchNode(node->childs[i], targetHeight, heightOfNode++);//рекурсивно проделываем это для каждого сына
+		}
+	}
+														 //увеличивая высоту			
 }
 
-void Width(Node *t, Node **min, Node **max)	 //функция определения самого широкого(узкого) поддерева
+Node *searchMinWidthOfNode(Node *t, Node **min)	 //функция определения самого широкого(узкого) поддерева
 {
 
 	if (*min == NULL)						//если минимальное дерево пусто
@@ -83,34 +86,44 @@ void Width(Node *t, Node **min, Node **max)	 //функция определен
 	else if (t->countChildsOfNode < (*min)->countChildsOfNode)				//иначе если ширина текущего дерева меньше минимальной
 		*min = t;							//то делаем текущее дерево узким
 
-	if (*max == NULL)						//если максимальное дерево пусто
-		*max = t;							//то присваеваем ему текущее дерево
-	else if (t->countChildsOfNode >(*max)->countChildsOfNode)				//иначе если ширина текущего дерева больше максимальной
-		*max = t;							//то делаем текущее дерево широким
-
 	for (int i = 0; i < t->countChildsOfNode; i++)
 	{
-		Width(t->childs[i], min, max);		//рекурсивно выполняем данные операции для каждого поддерева
+		searchMinWidthOfNode(t->childs[i], min);		//рекурсивно выполняем данные операции для каждого поддерева
 	}
+	return *min;
 }
 
+Node *searchMaxWidthOfNode(Node *node, Node **max)	 //функция определения самого широкого(узкого) поддерева
+{
+	if (*max == NULL)											//если максимальное дерево пусто
+	*max = node;													//то присваеваем ему текущее дерево
+	else if (node->countChildsOfNode > (*max)->countChildsOfNode)	//иначе если ширина текущего дерева больше максимальной
+	*max = node;													//то делаем текущее дерево широким
+
+	for (int i = 0; i < node->countChildsOfNode; i++)
+		{
+			searchMaxWidthOfNode(node->childs[i], max);		//рекурсивно выполняем данные операции для каждого поддерева
+		}
+	return *max;
+}
 
 int main()
 {
 	setlocale(LC_ALL, "RUS");				//поддержка русских символов
 	cout << "Первое число - номер уровня, второе число - номер элемента в уровне\n";
-	Node *t;								//создаем дерево
-	t = new Node;							//и выделяем под него память
-	t = createTree(t, 0, 0);				//заполняем дерево
-	printTree(t);							//выводим дерево на экран
+	Node *tree;								//создаем дерево
+	tree = new Node;							//и выделяем под него память
+	tree = createTree(tree, 0, 0);				//заполняем дерево
+	printTree(tree);							//выводим дерево на экран
 	cout << "Введите нужную высоту: " << endl;
-	int cHeight;							
-	cin >> cHeight;							//вводим высоту поддерева
-	Node *t1;								//создаем ещё одно дерево
-	t1 = new Node;							//и выделяем под него память
-	t1 = needHeight(t, cHeight, 0);			//Находим поддеревья нужной высоты
+	int targetHeight;							
+	cin >> targetHeight;					//вводим высоту поддерева
+	Node *treeOfTargetHeight;								//создаем ещё одно дерево
+	treeOfTargetHeight = new Node;							//и выделяем под него память
+	treeOfTargetHeight = searchNode(tree, targetHeight, 0);	//Находим поддеревья нужной высоты
 	Node *min = NULL, *max = NULL;			//создаем объекты широкого и узкого поддеревьев
-	Width(t1, &min, &max);					//определяем их
+	min=searchMinWidthOfNode(treeOfTargetHeight, &min);			//определяем их
+	min=searchMaxWidthOfNode(treeOfTargetHeight, &max);
 	if (min != NULL)						//если самое узкое дерево нашлось
 	{
 		cout << "Самое узкое дерево заданной высоты" << endl;
@@ -121,8 +134,8 @@ int main()
 		cout << "Самое широкое дерево заданной высоты" << endl;
 		printTree(max);						//то выводим его на экран
 	}
-	deleteTree(t);							//удаляем деревья
-	deleteTree(t1);	
+	deleteTree(tree);						//удаляем деревья
+	deleteTree(treeOfTargetHeight);	
 	deleteTree(min);
 	deleteTree(max);
 	return 0;								//выход из программы						
